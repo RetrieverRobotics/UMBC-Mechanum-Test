@@ -25,18 +25,18 @@ using namespace std;
 
 //motor ports
 #define LEFT_FRONT_MOTOR_PORT        1
-#define LEFT_BACK_MOTOR_PORT         2
+#define LEFT_BACK_MOTOR_PORT         6
 #define RIGHT_FRONT_MOTOR_PORT       3
-#define RIGHT_BACK_MOTOR_PORT        5
+#define RIGHT_BACK_MOTOR_PORT        7
 
 
-pros::Motor drive_left_front_motor = pros::Motor(LEFT_FRONT_MOTOR_PORT);
+pros::Motor drive_left_front_motor = pros::Motor(LEFT_FRONT_MOTOR_PORT, MOTOR_REVERSE);
 
 pros::Motor drive_left_back_motor = pros::Motor(LEFT_BACK_MOTOR_PORT,MOTOR_REVERSE);
 
 pros::Motor drive_right_front_motor = pros::Motor(RIGHT_FRONT_MOTOR_PORT);
 
-pros::Motor drive_right_back_motor = pros::Motor(RIGHT_BACK_MOTOR_PORT, MOTOR_REVERSE);
+pros::Motor drive_right_back_motor = pros::Motor(RIGHT_BACK_MOTOR_PORT);
 
 void umbc::Robot::opcontrol() {
 
@@ -60,9 +60,9 @@ void umbc::Robot::opcontrol() {
 
 
     while(1) {
-        x = controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
-        y = -controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        turn = controller_master->get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+        x = std::cbrt(controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+        y = std::cbrt(-controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+        turn = -controller_master->get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
         theta = std::atan2(y, x);
         power = std::hypot(x, y);
@@ -71,10 +71,12 @@ void umbc::Robot::opcontrol() {
         cos = std::cos(theta - (M_PI/4));
         max = std::max(std::abs(sin),std::abs(cos));
 
-        drive_left_front_motor.move(std::int32_t (127 * power * cos/max + turn));
-        drive_right_front_motor.move(std::int32_t (127 * power * sin/max - turn));
-        drive_left_back_motor.move(std::int32_t (127 * power * sin/max + turn));
-        drive_right_back_motor.move(std::int32_t (127 * power * cos/max - turn));
+        drive_left_front_motor.move(std::int32_t (58 * std::cbrt(power * cos/max + turn)));
+        pros::lcd::print(0, "motor voltage %i\n", drive_left_front_motor.get_voltage());
+        
+        drive_right_front_motor.move(std::int32_t (58 * std::cbrt(power * sin/max - turn)));
+        drive_left_back_motor.move(std::int32_t (58 * std::cbrt(power * sin/max + turn)));
+        drive_right_back_motor.move(std::int32_t (58 * std::cbrt(power * cos/max - turn)));
 
 
 
