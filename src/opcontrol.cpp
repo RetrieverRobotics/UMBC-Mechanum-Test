@@ -9,6 +9,7 @@
 #include "api.h"
 #include "pros/misc.h"
 #include "umbc.h"
+#include "umbc/robot.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -44,14 +45,20 @@ void umbc::Robot::opcontrol() {
     umbc::Controller* controller_master = this->controller_master;
     umbc::Controller* controller_partner = this->controller_partner;
 
-    float x;
-    float y;
-    float turn;
-    float power;
-    float theta;
-    float sin;
-    float cos;
-    float max;
+    umbc::util* util;
+
+    int32_t x;
+    int32_t y;
+    int32_t turn;
+    // int32_t power;
+    // int32_t theta;
+    // int32_t sin;
+    // int32_t cos;
+    // int32_t max;
+    int32_t lf;
+    int32_t rf;
+    int32_t lb;
+    int32_t rb;
 
     
 
@@ -60,44 +67,64 @@ void umbc::Robot::opcontrol() {
 
 
     while(1) {
-        x = std::cbrt(controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-        y = std::cbrt(-controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-        turn = -controller_master->get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
-        theta = std::atan2(y, x);
-        power = std::hypot(x, y);
+        //DriveBase 
+         x = (controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+         y =    (-1 * controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+         turn = (-1 * controller_master->get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
 
-        sin = std::sin(theta - (M_PI/4));
-        cos = std::cos(theta - (M_PI/4));
-        max = std::max(std::abs(sin),std::abs(cos));
-
-        drive_left_front_motor.move(std::int32_t (58 * std::cbrt(power * cos/max + turn)));
-        pros::lcd::print(0, "motor voltage %i\n", drive_left_front_motor.get_voltage());
+         lf = y+x+turn;        
+         rf = y-x-turn;
+         lb = y-x+turn;
+         rb = y+x-turn;
         
-        drive_right_front_motor.move(std::int32_t (58 * std::cbrt(power * sin/max - turn)));
-        drive_left_back_motor.move(std::int32_t (58 * std::cbrt(power * sin/max + turn)));
-        drive_right_back_motor.move(std::int32_t (58 * std::cbrt(power * cos/max - turn)));
+        // theta = std::atan2(y, x);
+        // power = std::hypot(x, y);
+
+        // sin = std::sin(theta - (M_PI/4));
+        // cos = std::cos(theta - (M_PI/4));
+        // max = std::max(std::abs(sin),std::abs(cos));
+
+        // drive_left_front_motor.move(std::int32_t (58 * (power * cos/max + turn)));
+        // drive_right_front_motor.move(std::int32_t (58 * (power * sin/max - turn)));
+        // drive_left_back_motor.move(std::int32_t (58 * (power * sin/max + turn)));
+        // drive_right_back_motor.move(std::int32_t (58 * (power * cos/max - turn)));
+        
+        // drive_left_front_motor.move(std::int32_t (y*127));
+        // drive_right_front_motor.move(std::int32_t (y*127));
+        // drive_left_back_motor.move(std::int32_t (y*127));
+        // drive_right_back_motor.move(std::int32_t (y*127));
+        //  drive_left_front_motor.move(std::int32_t (x*127));
+        //  drive_right_front_motor.move(std::int32_t (-x*127));
+        //  drive_left_back_motor.move(std::int32_t (-x*127));
+        //  drive_right_back_motor.move(std::int32_t (x*127));
+        
+        drive_left_front_motor.move_velocity(util->bound(lf));
+        pros::lcd::print(0, "inputLF %i\n", util->bound(lf));
+        drive_right_front_motor.move_velocity(util->bound(rf));
+        pros::lcd::print(1, "inputRF %i\n", util->bound(rf));
+        drive_left_back_motor.move_velocity(util->bound(lb));
+        pros::lcd::print(2, "inputLB %i\n", util->bound(lb));
+        drive_right_back_motor.move_velocity(util->bound(rb));
+        pros::lcd::print(3, "inputRB %i\n", util->bound(rb));
+
+       
+        
+        
+
 
 
 
 
         
-        
-        
-        // drive_left_front_motor.move_velocity(controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)*1.58 + 
-        // controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X)*1.58 - controller_master->get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-
-        // drive_left_back_motor.move_velocity(-controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)*1.58 - 
-        // controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X)*1.58 - controller_master->get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-
-        // drive_right_front_motor.move_velocity(-controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)*1.58 + 
-        // controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X)*1.58 - controller_master->get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-
-        // drive_right_back_motor.move_velocity(controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)*1.58 - 
-        // controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X)*1.58 - controller_master->get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-
         
         // required loop delay (do not edit)
         pros::Task::delay(this->opcontrol_delay_ms);
     }
+
+
+    
 }
+
+
+
