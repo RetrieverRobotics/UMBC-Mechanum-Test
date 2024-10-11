@@ -115,10 +115,10 @@ void umbc::Robot::opcontrol() {
 
     while(1) {
 
-        //DriveBase 
+        //DriveBase w
             //gets inputs from controller and assigns the values to x, y, and turn
             x = controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
-            y =    (-1 * controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+            y = -controller_master->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
             turn = (-1 * controller_master->get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
             //translates the x, y, and turn values into an integer value from -1 to 1
             x = x < 0 ? x * x * -1 : x * x;
@@ -128,13 +128,13 @@ void umbc::Robot::opcontrol() {
             turn = turn < 0 ? turn * turn * -1 : turn * turn;
             turn /= JOYSTICK_MAX;
             //calculates the required power to each motor as a value from -1 to 1
-            lf = (y+x+turn)*gearMult;        
+            lf = (y+x+turn);        
             pros::lcd::print(0, "inputLB %d\n", int(lf));
-            rf = (y-x-turn)*gearMult;
+            rf = (y-x-turn);
             pros::lcd::print(1, "inputLB %d\n", int(rf));
-            lb = (y-x+turn)*gearMult;
+            lb = (y-x+turn);
             pros::lcd::print(2, "inputLB %d\n", int(lb));
-            rb = (y+x-turn)*gearMult;
+            rb = (y+x-turn);
             pros::lcd::print(3, "inputLB %d\n", int(rb));
             //sends the velocity to the motor
             drive_left_front_motor.move_velocity(lf*gearMult);
