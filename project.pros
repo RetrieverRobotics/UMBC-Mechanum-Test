@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "Mecanum test",
+    "project_name": "UMBC VEX-U Mechanum Test",
     "target": "v5",
     "templates": {
       "kernel": {
@@ -309,7 +309,7 @@
       }
     },
     "upload_options": {
-      "description": "UMBC Retreiver Robotics standard competition template for the VEX-U Competition.",
+      "description": "A basic controller for a mechum bot.",
       "icon": "ufo"
     }
   }
