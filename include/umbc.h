@@ -11,6 +11,7 @@
 #include "umbc/robot.hpp"
 #include "umbc/vcontroller.hpp"
 #include "umbc/log.hpp"
+#include "umbc/util.hpp"
 #endif
 
 #endif // _UMBC_H_

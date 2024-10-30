@@ -338,3 +338,4 @@ std::int32_t umbc::Robot::opcontrol_isListed() {
     return (nullptr == t_opcontrol) ? 0 
         : ((t_opcontrol->get_state() != E_TASK_STATE_INVALID) && (t_opcontrol->get_state() != E_TASK_STATE_DELETED));
 }
+

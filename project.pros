@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "UMBC VEX-U Mechanum Test",
+    "project_name": "Mecanum test",
     "target": "v5",
     "templates": {
       "kernel": {
