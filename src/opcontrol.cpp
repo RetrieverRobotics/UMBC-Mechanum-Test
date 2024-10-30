@@ -39,17 +39,10 @@ std::vector<int8_t> leftFront;
 std::vector<int8_t> leftBack;
 std::vector<int8_t> rightFront;
 std::vector<int8_t> rightBack;
-
-
 pros::Motor drive_left_front_motor = pros::Motor(LEFT_FRONT_MOTOR_PORT, MOTOR_REVERSE);
-
 pros::Motor drive_left_back_motor = pros::Motor(LEFT_BACK_MOTOR_PORT,MOTOR_REVERSE);
-
 pros::Motor drive_right_front_motor = pros::Motor(RIGHT_FRONT_MOTOR_PORT);
-
 pros::Motor drive_right_back_motor = pros::Motor(RIGHT_BACK_MOTOR_PORT);
-
-
 
 void umbc::Robot::opcontrol() {
 
@@ -57,6 +50,7 @@ void umbc::Robot::opcontrol() {
     // nice names for controllers (do not edit)
     umbc::Controller* controller_master = this->controller_master;
     umbc::Controller* controller_partner = this->controller_partner;
+
     //creates groups for all the motors
     leftFront.assign ({LEFT_FRONT_MOTOR_PORT });
     leftBack.assign  ({LEFT_BACK_MOTOR_PORT  });
@@ -97,21 +91,15 @@ void umbc::Robot::opcontrol() {
             gearMult = MOTOR_BLUE_GEAR_MULTIPLIER;
     }
 
-    
-
     double x;
     double y;
     double turn;
     double lf;
     double rf;
     double lb;
-    double rb;
-
-    
+    double rb;    
 
     // initialize motors and sensors
-
-
 
     while(1) {
 
@@ -141,24 +129,8 @@ void umbc::Robot::opcontrol() {
             drive_right_front_motor.move_velocity(rf*gearMult);
             drive_left_back_motor.move_velocity(lb*gearMult);
             drive_right_back_motor.move_velocity(rb*gearMult);
-
-       
-        
-        
-
-
-
-
-
-        
         
         // required loop delay (do not edit)
         pros::Task::delay(this->opcontrol_delay_ms);
-    }
-
-
-    
+    }   
 }
-
-
-
