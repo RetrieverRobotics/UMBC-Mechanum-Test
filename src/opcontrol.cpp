@@ -7,6 +7,7 @@
  */
 
 #include "api.h"
+#include "pros/adi.hpp"
 #include "pros/misc.h"
 #include "pros/motors.h"
 #include "pros/motors.hpp"
@@ -22,7 +23,7 @@ using namespace pros;
 using namespace umbc;
 using namespace std;
 
-#define GEARBOX_COLOR                'b'
+#define GEARBOX_COLOR                'g'
 #define MOTOR_RED_GEAR_MULTIPLIER    100
 #define MOTOR_GREEN_GEAR_MULTIPLIER  200
 #define MOTOR_BLUE_GEAR_MULTIPLIER   600
@@ -36,18 +37,21 @@ using namespace std;
 #define RIGHT_BACK_MOTOR_PORT_2     8
 #define LEFT_FRONT_MOTOR_PORT_1 1
 #define LEFT_FRONT_MOTOR_PORT_2 -2
-#define LEFT_BACK_MOTOR_PORT_1 3
-#define LEFT_BACK_MOTOR_PORT_2 -4
+#define LEFT_BACK_MOTOR_PORT_1 -16
+#define LEFT_BACK_MOTOR_PORT_2 4
 #define INTAKE_MOTOR 12
 #define SCORING_MOTOR -11
 
+
 //sensors
 #define PISTON_DIO 1
+#define PISTON_LIMIT_SWITCH_DIO 2
 
 
 void umbc::Robot::opcontrol() {
 
     pros::ADIDigitalOut piston (PISTON_DIO);
+    pros::ADIDigitalIn  pistonLimitSwitch (PISTON_LIMIT_SWITCH_DIO);
 
     // nice names for controllers (do not edit)12121212
     umbc::Controller* controller_master = this->controller_master;
@@ -90,7 +94,6 @@ void umbc::Robot::opcontrol() {
 
     //scoring variables
     int isScoring; //used to trigger scoring system
-    int isOuttaking;
 
     //variables to change top speed
     double speedPercent;
@@ -99,7 +102,8 @@ void umbc::Robot::opcontrol() {
     //locking mechanism varibales
     bool isLocked = false;
     //intake bool
-    int isIntaking;
+    bool isIntaking = false;
+    bool isOuttaking = false;
     
 
     while(1) {
@@ -125,73 +129,72 @@ void umbc::Robot::opcontrol() {
             x /= JOYSTICK_MAX;
             y = -1*((y < 0) ? y * y * -1 : y * y);
             y /= JOYSTICK_MAX;
-            turn = (turn < 0) ? turn * turn * -1 : turn * turn;
+            turn = -1*((turn < 0) ? turn * turn * -1 : turn * turn);
             turn /= JOYSTICK_MAX;
             
             //calculates the required power to each motor as a value from -1 to 1
-            lf = (y+x+turn);
+            lf = (y-x+turn);
             rf = (y-x-turn);
-            lb = (y-x+turn);
+            lb = (y+x+turn);
             rb = (y+x-turn);
             
             //sends the velocity to the motor
             speedPercent = speedlist[speedIndex];
-            frontRightGroup.move_velocity(rf*gearMult*speedPercent);
-            backRightGroup.move_velocity(rb*gearMult*speedPercent);
-            frontLeftGroup.move_velocity(lf*gearMult*speedPercent);
-            backLeftGroup.move_velocity(lb*gearMult*speedPercent);
+            frontRightGroup.move_velocity(rf*gearMult);
+            backRightGroup.move_velocity(rb*gearMult);
+            frontLeftGroup.move_velocity(lf*gearMult);
+            backLeftGroup.move_velocity(lb*gearMult);
 
-        //mechanism states 
-        int state = 4; //intake intaking
-        
-        if(controller_master->get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
-            state = 1;
-        }
-        else if (controller_master->get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-            state = 2;
-        }
-        else if (controller_master->get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-            state = 3;
-        }
-        else if (controller_master->get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
-            state = 4;
-        }
-        else{
-            state = 5;
-        }
-
-        switch (state) {
-            case 1:
-                intakeGroup.move_velocity(gearMult);
-                break;
-            case 2:
-                scoringGroup.move_velocity(MOTOR_GREEN_GEAR_MULTIPLIER*0.6);
-                intakeGroup.move_velocity(gearMult);
-                break;
-            case 3:
-                scoringGroup.move_velocity(-1*MOTOR_GREEN_GEAR_MULTIPLIER*0.8);
-                intakeGroup.move_velocity(-1*gearMult);
-                break;
-            case 4:
-                scoringGroup.move_velocity(-1*0*0.6);
-                intakeGroup.move_velocity(-1*0);
-                break;
-            default:
-                pros::lcd::print(3, "isIntaking %d\n", bool(isIntaking));
-        }
-        state = 4;
-
-        //locking
-            if(controller_master->get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)){
-                if(isLocked){
-                    piston.set_value(false);
-                    isLocked = false;
+        //scoring
+            if(controller_master->get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)){
+                if(isOuttaking){
+                    isOuttaking = false;
+                    intakeGroup.move_velocity(0);
+                    scoringGroup.move_velocity(0);
                 }
                 else{
-                    piston.set_value(true);
-                    isLocked = true;
+                    isOuttaking = true;
+                    intakeGroup.move_velocity(1*MOTOR_BLUE_GEAR_MULTIPLIER);
+                    scoringGroup.move_velocity(0.8*gearMult);
+                    controller_master->rumble("------");
                 }
             }
+            if(controller_master->get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)){
+                if(isIntaking){
+                    isIntaking = false;
+                    intakeGroup.move_velocity(0);
+                    scoringGroup.move_velocity(0);
+                }
+                else{
+                    isIntaking = true;
+                    intakeGroup.move_velocity(-1.1*gearMult);
+                    scoringGroup.move_velocity(-1.2*gearMult);
+                }
+            }
+        
+
+        //locking
+            
+                if((pistonLimitSwitch.get_value() == 1) && !(controller_master->get_digital(pros::E_CONTROLLER_DIGITAL_A))){
+                    piston.set_value(true);
+                    isLocked = true;
+                    controller_master->set_text(0, 0, "");
+                    controller_master->set_text(0, 0, "goal locked");
+                }
+                else if(isLocked && controller_master->get_digital(pros::E_CONTROLLER_DIGITAL_A)){
+                    piston.set_value(false);
+                    isLocked = false;
+                    controller_master->set_text(0, 0, "");
+                    controller_master->set_text(0, 0, "goal unlocked");
+                }
+                else if(!pistonLimitSwitch.get_value()){
+                    piston.set_value(false);
+                    isLocked = false;
+                    controller_master->set_text(0, 0, "");
+                    controller_master->set_text(0, 0, "goal unlocked");
+                }
+                
+            
             
 
 
